@@ -1,0 +1,51 @@
+name: Build and Package jdm-java
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    env:
+      RELEASE_VERSION: v0.6.0
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Compile Java files
+        run: |
+          mkdir -p out
+          # Find and compile all .java files in src folder
+          find src -name "*.java" > sources.txt || dir /S /B src\*.java > sources.txt
+          javac -d out @sources.txt
+
+      - name: Run unit tests (if any)
+        run: |
+          echo "Running unit tests..."
+          # Placeholder: Add your test command here, e.g., ./gradlew test or mvn test
+          # Exit 0 to prevent failure if no tests exist
+          exit 0
+
+      - name: Zip compiled classes
+        run: |
+          zip -r jdiskmark-${{ env.RELEASE_VERSION }}.zip out/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jdiskmark-${{ env.RELEASE_VERSION }}-${{ matrix.os }}
+          path: jdiskmark-${{ env.RELEASE_VERSION }}.zip
